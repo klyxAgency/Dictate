@@ -24,44 +24,24 @@ if errorlevel 1 (
 :: Install pip packages
 echo.
 echo [2/4] Installing required packages...
-pip install faster-whisper sounddevice numpy keyboard pyautogui pystray pillow
+pip install faster-whisper sounddevice numpy keyboard pyautogui pystray pillow pyperclip nvidia-cublas-cu12 nvidia-cudnn-cu12 nvidia-cuda-runtime-cu12
 echo  Packages installed ✓
 
-:: Create app folder
+:: App runs from current directory
 echo.
-echo [3/4] Setting up app folder...
-if not exist "C:\dictate-app" mkdir "C:\dictate-app"
-copy /Y "%~dp0dictate.py" "C:\dictate-app\dictate.py" >nul
-copy /Y "%~dp0run.bat"    "C:\dictate-app\run.bat"    >nul
-echo  Files copied ✓
+echo [3/4] App will run from current folder ✓
 
-:: Add to startup
-echo.
-echo [4/4] Adding to Windows startup...
-set STARTUP=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup
-set PYTHON_PATH=
-for /f "delims=" %%i in ('where python') do set PYTHON_PATH=%%i
-
-echo Set oWS = WScript.CreateObject("WScript.Shell") > "%TEMP%\shortcut.vbs"
-echo sLinkFile = "%STARTUP%\WhisperDictate.lnk" >> "%TEMP%\shortcut.vbs"
-echo Set oLink = oWS.CreateShortcut(sLinkFile) >> "%TEMP%\shortcut.vbs"
-echo oLink.TargetPath = "%PYTHON_PATH%" >> "%TEMP%\shortcut.vbs"
-echo oLink.Arguments = "C:\dictate-app\dictate.py" >> "%TEMP%\shortcut.vbs"
-echo oLink.WindowStyle = 7 >> "%TEMP%\shortcut.vbs"
-echo oLink.Description = "Whisper Dictate" >> "%TEMP%\shortcut.vbs"
-echo oLink.Save >> "%TEMP%\shortcut.vbs"
-cscript //nologo "%TEMP%\shortcut.vbs"
-echo  Added to startup ✓
+:: App will not be added to startup
 
 echo.
 echo  ================================================
 echo   Installation Complete!
 echo.
 echo   First run will download the Whisper model
-echo   (~74MB, one time only).
+echo   (~3GB, one time only).
 echo.
 echo   HOW TO USE:
-echo   - App starts automatically with Windows
+echo   - App can be run via run.bat or python dictate.py
 echo   - Green icon in system tray = ready
 echo   - Hold backtick key [  `  ] to record
 echo   - Release to transcribe and type
@@ -70,6 +50,6 @@ echo  ================================================
 echo.
 echo  Launching app now...
 timeout /t 2 >nul
-start "" python "C:\dictate-app\dictate.py"
+start "" python "%~dp0dictate.py"
 echo.
 pause

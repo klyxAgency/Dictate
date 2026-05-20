@@ -1,6 +1,6 @@
 @echo off
 title Whisper Dictate
-cd /d C:\dictate-app
+cd /d "%~dp0"
 
 :: Hide the console window after launch
 if not "%1"=="silent" (

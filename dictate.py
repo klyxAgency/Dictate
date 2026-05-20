@@ -1,19 +1,67 @@
+import os
+import site
+
+# Automatically add NVIDIA DLL paths for ctranslate2
+try:
+    for p in site.getsitepackages():
+        cudnn_path = os.path.join(p, "nvidia", "cudnn", "bin")
+        cublas_path = os.path.join(p, "nvidia", "cublas", "bin")
+        cudart_path = os.path.join(p, "nvidia", "cuda_runtime", "bin")
+        if os.path.exists(cudnn_path):
+            os.add_dll_directory(cudnn_path)
+            os.environ["PATH"] = cudnn_path + os.pathsep + os.environ["PATH"]
+        if os.path.exists(cublas_path):
+            os.add_dll_directory(cublas_path)
+            os.environ["PATH"] = cublas_path + os.pathsep + os.environ["PATH"]
+        if os.path.exists(cudart_path):
+            os.add_dll_directory(cudart_path)
+            os.environ["PATH"] = cudart_path + os.pathsep + os.environ["PATH"]
+except Exception:
+    pass
+
 import threading
 import tempfile
 import wave
 import time
 import sys
+import logging
+import traceback
+
+log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dictate.log')
+logging.basicConfig(filename=log_file, level=logging.DEBUG, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
+class StreamToLogger(object):
+    def __init__(self, logger, level):
+        self.logger = logger
+        self.level = level
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            self.logger.log(self.level, line.rstrip())
+    def flush(self):
+        pass
+
+sys.stdout = StreamToLogger(logging.getLogger('STDOUT'), logging.INFO)
+sys.stderr = StreamToLogger(logging.getLogger('STDERR'), logging.ERROR)
+
+def my_excepthook(type, value, tb):
+    logging.error("Uncaught exception:", exc_info=(type, value, tb))
+
+sys.excepthook = my_excepthook
+
+logging.info("--- Application Started ---")
 import numpy as np
 import sounddevice as sd
 import keyboard
 import pyautogui
+import pyperclip
 from faster_whisper import WhisperModel
 from PIL import Image, ImageDraw, ImageFont
 import pystray
 
 # ── CONFIG ─────────────────────────────────────────
 HOTKEY      = "`"
-MODEL_SIZE  = "base"
+MODEL_SIZE  = "large-v3"
 LANGUAGE    = "en"
 SAMPLE_RATE = 16000
 # ───────────────────────────────────────────────────
@@ -21,7 +69,7 @@ SAMPLE_RATE = 16000
 pyautogui.FAILSAFE = False
 
 print("⏳ Loading Whisper model...")
-model = WhisperModel(MODEL_SIZE, device="cpu", compute_type="int8")
+model = WhisperModel(MODEL_SIZE, device="cuda", compute_type="float16", local_files_only=True)
 print(f"✅ Ready! Hold [{HOTKEY}] to dictate.\n")
 
 recording     = False
@@ -79,15 +127,20 @@ def transcribe_and_type():
         wf.writeframes((audio * 32767).astype(np.int16).tobytes())
 
     print("🎙️  Transcribing...", end=" ", flush=True)
-    segments, _ = model.transcribe(tmp_path, language=LANGUAGE, beam_size=1)
-    text = " ".join(seg.text.strip() for seg in segments).strip()
+    try:
+        segments, _ = model.transcribe(tmp_path, language=LANGUAGE, beam_size=1)
+        text = " ".join(seg.text.strip() for seg in segments).strip()
 
-    if text:
-        print(f"→ {text}")
-        time.sleep(0.15)
-        pyautogui.typewrite(text + " ", interval=0.03)
-    else:
-        print("(nothing detected)")
+        if text:
+            print(f"→ {text}")
+            pyperclip.copy(text + " ")
+            time.sleep(0.15)
+            pyautogui.hotkey('ctrl', 'v')
+        else:
+            print("(nothing detected)")
+    except Exception as e:
+        print(f"ERROR during transcription: {e}")
+        traceback.print_exc()
 
     set_tray(ICON_IDLE, "Whisper — Ready (hold ` to dictate)")
 
