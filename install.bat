@@ -24,7 +24,7 @@ if errorlevel 1 (
 :: Install pip packages
 echo.
 echo [2/4] Installing required packages...
-pip install faster-whisper sounddevice numpy keyboard pyautogui pystray pillow pyperclip nvidia-cublas-cu12 nvidia-cudnn-cu12 nvidia-cuda-runtime-cu12
+pip install faster-whisper sounddevice numpy keyboard pyautogui pystray pillow pyperclip tkinterdnd2 Unidecode pyaudiowpatch pyannote.audio nvidia-cublas-cu12 nvidia-cudnn-cu12 nvidia-cuda-runtime-cu12
 echo  Packages installed ✓
 
 :: App runs from current directory

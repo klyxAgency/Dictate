@@ -1,0 +1,4 @@
+.env
+dictate.log
+__pycache__/
+*.pyc
