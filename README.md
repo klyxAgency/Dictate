@@ -25,6 +25,19 @@ A lightweight dictation tool that types what you say — in any app, any text fi
 
 ---
 
+## Prerequisites (Hugging Face Token)
+
+The app uses Pyannote for speaker diarization. You need a free Hugging Face token to use it.
+
+1. Create a free account at [Hugging Face](https://huggingface.co/).
+2. Accept the user conditions on the [Pyannote Speaker Diarization 3.1](https://huggingface.co/pyannote/speaker-diarization-3.1) and [Pyannote Segmentation 3.0](https://huggingface.co/pyannote/segmentation-3.0) pages.
+3. Go to **Settings > Access Tokens** ([link](https://huggingface.co/settings/tokens)).
+4. Create a **New token** with **Read** permissions and copy it (starts with `hf_...`).
+5. In the app folder, create a file named exactly `.env`.
+6. Inside the `.env` file, paste your token like this: `HF_TOKEN=hf_your_copied_token_here`
+
+---
+
 ## First-Time Installation (New PC)
 
 ### Step 1 — Copy Files
